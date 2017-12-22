@@ -2,12 +2,14 @@
 #define PUBSUB_MESSAGE_H_
 
 #include <stdint.h>
+#include <inttypes.h>
 
+#define MAX_MSG_LEN 256
+
+enum msg_type {publish, subscribe, unsubscribe};
 struct Message {
-  uint8_t mesage_type;
-  uint32_t key_len;
+  enum msg_type message_type;
   char *key;
-  uint32_t value_len;
   char *value;
 };
 

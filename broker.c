@@ -99,8 +99,8 @@ void msg_handler(int fd, char* buf, struct sockaddr_un *from_p, socklen_t fromle
     int ret;
 
     //todo check malloc fail 
-    msg_p->key = (char*)malloc(KEY_LEN);
-    msg_p->value = (char*)malloc(VALUE_LEN);
+    msg.key = (char*)malloc(KEY_LEN);
+    msg.value = (char*)malloc(VALUE_LEN);
     ret = parse_msg(buf, &msg);
     if (ret < 0) {
         return;

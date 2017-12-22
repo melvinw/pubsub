@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "broker.h"
 #include "message.h"
 #include "common.h"
@@ -153,12 +154,12 @@ int main() {
     while (running) {
 	len = recvfrom(fd, buf, MAX_MSG_LEN, 0, (struct sockaddr *)&from, &fromlen);
  	if (len <= 0) {
-	    running = 0;
             continue;
 	}	
         
         printf("received buf:%s\n", buf); 
         msg_handler(fd, buf, &from, fromlen); 
+      sleep(1);
     }
 
     if (fd > 0) {

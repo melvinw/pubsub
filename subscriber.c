@@ -20,7 +20,6 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
   ctx->key = (char *)malloc(key_len);
   strncpy(ctx->key, key, key_len);
 
-  printf("opening...");
   int fd = socket(PF_UNIX, SOCK_DGRAM, 0); 
   if (fd < 0) {
     printf("socket() failed while subscribing to %s/%s (errno = %d)\n",
@@ -33,7 +32,6 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
   strcpy(addr.sun_path, CLIENT_SOCK_FILE);
-  printf("binding...");
   int ret = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
   unlink(CLIENT_SOCK_FILE);
   if (ret < 0) {
@@ -47,7 +45,6 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
   strcpy(addr.sun_path, broker_socket);
-  printf("connecting...");
   ret = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
   if (ret < 0) {
     close(fd);
@@ -60,15 +57,17 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
   struct Message msg;
   msg.message_type = subscribe;
   msg.key = (char *)malloc(key_len);
+  msg.value = NULL;
   if (msg.key == NULL) {
     close(fd);
     ctx->socket = -1;
     return -ENOMEM;
   }
+  strncpy(msg.key, key, key_len);
 
   char buf[MAX_MSG_LEN];
-  printf("serializing...");
   ret = serialize_msg(buf, &msg);
+  free(msg.key);
   if (ret < 0) {
     close(fd);
     ctx->socket = -1;
@@ -76,9 +75,7 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
            broker_socket, key, -ret);
     return ret;
   }
-  printf("serialized: %s\n", buf);
 
-  printf("sending...");
   ret = send(ctx->socket, buf, ret, 0);
   if (ret < 0) {
     close(fd);

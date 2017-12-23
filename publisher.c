@@ -25,7 +25,8 @@ int Publish(char *broker_socket, char *key, char *value) {
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, CLIENT_SOCK_FILE);
+  strcpy(addr.sun_path, PUB_SOCK_FILE);
+  unlink(PUB_SOCK_FILE);
   int ret = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
   if (ret < 0) {
     close(fd);
@@ -33,11 +34,10 @@ int Publish(char *broker_socket, char *key, char *value) {
            broker_socket, key, errno);
     return -errno;
   }
-  unlink(CLIENT_SOCK_FILE);
 
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, SERVER_SOCK_FILE);
+  strcpy(addr.sun_path, BROKER_SOCK_FILE);
   ret = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
   if (ret < 0) {
     close(fd);
@@ -60,7 +60,7 @@ int Publish(char *broker_socket, char *key, char *value) {
     return ret;
   }
 
-  ret = send(fd, buf, ret, 0);
+  ret = send(fd, buf, strlen(buf)+1, 0);
   if (ret < 0) {
     close(fd);
     printf("send() failed while publishing to %s/%s (errno = %d)\n",

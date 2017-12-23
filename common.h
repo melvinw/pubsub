@@ -1,8 +1,8 @@
 #ifndef PUBSUB_COMMON_H_
 #define PUBSUB_COMMON_H_
 
-#define MAX_MSG_LEN 256
-#define CLIENT_SOCK_FILE "client.sock"
-#define SERVER_SOCK_FILE "server.sock"
+#define SUB_SOCK_FILE "sub.sock"
+#define PUB_SOCK_FILE "pub.sock"
+#define BROKER_SOCK_FILE "broker.sock"
 
 #endif // PUBSUB_COMMON_H_

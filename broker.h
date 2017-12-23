@@ -4,9 +4,7 @@
 #include "uthash.h"
 #include <sys/socket.h>
 #include <sys/un.h>
-
-#define KEY_LEN 64
-#define VALUE_LEN 128
+#include "message.h"
 
 struct sock_info {
     struct sockaddr_un sub_sock;

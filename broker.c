@@ -27,8 +27,13 @@ void process_publish(int fd, struct Message* msg_p) {
     while (p) {
         //push key value information into the requested subscribes
         char buf[MAX_MSG_LEN];
-        sprintf(buf, "%s %s", msg_p->key, msg_p->value);
-	sendto(fd, buf, strlen(buf)+1, 0, (struct sockaddr*)&(p->sub_sock), p->sub_sock_len);
+        sprintf(buf, "%d %s %s", update, msg_p->key, msg_p->value);
+        int ret;
+	ret = sendto(fd, buf, strlen(buf)+1, 0, (struct sockaddr*)&(p->sub_sock), p->sub_sock_len);
+        if (ret <= 0) {
+	    perror("send");
+            exit(1);
+        }
         p = p->next;
     }
 }
@@ -143,8 +148,8 @@ int main() {
 
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, SERVER_SOCK_FILE);
-    unlink(SERVER_SOCK_FILE);
+    strcpy(addr.sun_path, BROKER_SOCK_FILE);
+    unlink(BROKER_SOCK_FILE);
     ret = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
     if (ret < 0) {
         printf("unix bind failed on broker");
@@ -154,12 +159,12 @@ int main() {
     while (running) {
 	len = recvfrom(fd, buf, MAX_MSG_LEN, 0, (struct sockaddr *)&from, &fromlen);
  	if (len <= 0) {
+            running = 0;
             continue;
 	}	
         
         printf("received buf:%s\n", buf); 
         msg_handler(fd, buf, &from, fromlen); 
-      sleep(1);
     }
 
     if (fd > 0) {

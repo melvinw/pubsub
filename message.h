@@ -5,8 +5,10 @@
 #include <inttypes.h>
 
 #define MAX_MSG_LEN 256
+#define KEY_LEN 64
+#define VALUE_LEN 128
 
-enum msg_type {publish, subscribe, unsubscribe};
+enum msg_type {publish, subscribe, unsubscribe, update};
 
 struct Message {
   enum msg_type message_type;

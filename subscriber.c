@@ -28,14 +28,15 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
     return -errno;
   }
   ctx->socket = fd;
+  printf("sub socket:%d\n", ctx->socket);
 
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, CLIENT_SOCK_FILE);
+  strcpy(addr.sun_path, SUB_SOCK_FILE);
   printf("binding...");
+  unlink(SUB_SOCK_FILE);
   int ret = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-  unlink(CLIENT_SOCK_FILE);
   if (ret < 0) {
     close(fd);
     ctx->socket = -1;
@@ -59,7 +60,7 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
 
   struct Message msg;
   msg.message_type = subscribe;
-  msg.key = (char *)malloc(key_len);
+  msg.key = key;
   if (msg.key == NULL) {
     close(fd);
     ctx->socket = -1;
@@ -79,7 +80,7 @@ int Subscribe(char *broker_socket, char *key, struct SubscriberContext *ctx) {
   printf("serialized: %s\n", buf);
 
   printf("sending...");
-  ret = send(ctx->socket, buf, ret, 0);
+  ret = send(ctx->socket, buf, strlen(buf)+1, 0);
   if (ret < 0) {
     close(fd);
     ctx->socket = -1;
@@ -99,6 +100,7 @@ int Unsubscribe(struct SubscriberContext *ctx) {
   struct Message msg;
   msg.message_type = unsubscribe;
   msg.key = ctx->key;
+  msg.value = NULL;
 
   char buf[MAX_MSG_LEN];
   int ret = serialize_msg(buf, &msg);
@@ -107,8 +109,8 @@ int Unsubscribe(struct SubscriberContext *ctx) {
            ctx->key, errno);
     return -errno;
   }
-
-  ret = send(ctx->socket, buf, ret, 0);
+  printf("in subscribe %s\n", buf);
+  ret = send(ctx->socket, buf, strlen(buf)+1, 0);
   if (ret < 0) {
     printf("send() failed while unsubscribing for %s (errno = %d)\n",
            ctx->key, errno);
@@ -127,6 +129,7 @@ int GetUpdate(const struct SubscriberContext *ctx, struct Message *msg) {
   }
 
   char buf[MAX_MSG_LEN];
+  printf("update socket:%d\n", ctx->socket);
   int ret = recv(ctx->socket, buf, MAX_MSG_LEN, 0);
   if (ret < 0) {
     printf("recv() failed while getting update for %s (errno = %d)\n",
@@ -136,15 +139,20 @@ int GetUpdate(const struct SubscriberContext *ctx, struct Message *msg) {
     return -EAGAIN;
   }
 
-  struct Message update;
-  ret = deserialize_msg(&update, buf);
+  //struct Message update;
+  //todo message type should be update
+  ret = deserialize_msg(msg, buf);
   if (ret < 0) {
     printf("deserialize_msg() failed while receiving update for %s (errno = %d)\n",
            ctx->key, -ret);
     return ret;
   }
-
-  copy_msg(msg, &update);
+ 
+  /*
+   * copy_msg has segmentation fault
+   * because it does not allocate space for key and value of both msg and update
+   */
+  //copy_msg(msg, &update);
 
   return 0;
 }

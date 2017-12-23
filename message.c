@@ -8,11 +8,12 @@
 int serialize_msg(char *buf, const struct Message *msg) {
   char *k = msg->key;
   char *v = msg->value;
-  sprintf(buf, "%d\n%s\n%s", msg->message_type, (k != NULL) ? k : "", (v != NULL) ? v : "");
+  sprintf(buf, "%d %s %s", msg->message_type, (k != NULL) ? k : "", (v != NULL) ? v : "");
   return 0;
 }
 
 int deserialize_msg(struct Message *msg, const char *buf) {
+  sscanf(buf, "%d %s %s", (int*)&msg->message_type, msg->key, msg->value);  
   return 0;
 }
 

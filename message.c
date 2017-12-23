@@ -13,7 +13,14 @@ int serialize_msg(char *buf, const struct Message *msg) {
 }
 
 int deserialize_msg(struct Message *msg, const char *buf) {
-  sscanf(buf, "%d %s %s", (int*)&msg->message_type, msg->key, msg->value);  
+  if (buf == NULL) {
+    return -EINVAL;
+  }
+
+  int ret = sscanf(buf, "%d %s %s", (int*)&msg->message_type, msg->key, msg->value);
+  if (ret < 3) {
+    return -EINVAL;
+  }
   return 0;
 }
 
